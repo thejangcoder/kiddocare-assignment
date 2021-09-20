@@ -15,11 +15,14 @@ if ($username && $password) {
         if (strcmp($result, $username_password) == 0) {
             // user is exist in users.txt
             $_SESSION["username_password"] = $username_password;
-            header("Location: ./index.php");
+            header("Location: ./index.php?months=5&years=1995&submit=Search");
             exit();
         }
     }
     fclose($file);
+    echo '<script type="text/javascript">';
+    echo 'alert("No active account is found. Please try again.")';
+    echo '</script>';
 }
 ?>
 
@@ -77,14 +80,14 @@ if ($username && $password) {
                             <h3 class="text-center text-info">Login</h3>
                             <div class="form-group">
                                 <label for="username" class="text-info">Username:</label><br>
-                                <input type="text" name="username" id="username" value="iszuddin" class="form-control">
+                                <input type="text" name="username" id="username" value="" class="form-control">
                             </div>
                             <div class="form-group">
                                 <label for="password" class="text-info">Password:</label><br>
-                                <input type="text" name="password" id="password" value="KudaBelang" class="form-control">
+                                <input type="password" name="password" id="password" value="" class="form-control">
                             </div>
                             <div class="text-center">
-                                <input type="submit" name="submit" class="btn btn-info btn-md" value="submit">
+                                <input type="submit" name="submit" class="btn btn-info btn-md" value="Login">
                             </div>
                         </form>
                     </div>
