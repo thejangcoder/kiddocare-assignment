@@ -8,19 +8,37 @@ if (!$_SESSION["username_password"]) {
     $username = explode("|", $_SESSION["username_password"])[0];
 }
 
+$months = array(
+    '1' => 'January',
+    '2' => 'Febuary',
+    '3' => 'March',
+    '4' => 'April',
+    '5' => 'May',
+    '6' => 'June',
+    '7' => 'July',
+    '8' => 'August',
+    '9' => 'September',
+    '10' => 'October',
+    '11' => 'November',
+    '12' => 'December'
+);
+
+$selectedMonth = isset($_GET['months']) ? $_GET['months'] : "5";
+$selectedYear = isset($_GET['years']) ? $_GET['years'] : "1995";
+
 $sql_total_order = "SELECT COUNT(*) AS Total_Order FROM northwindmysql.orders a
                         JOIN northwindmysql.order_details b ON a.orderid = b.orderid
-                        WHERE YEAR(a.orderdate) = 1995 and MONTH(a.orderdate) = 5";
+                        WHERE YEAR(a.orderdate) = ".$selectedYear." and MONTH(a.orderdate) = ".$selectedMonth.";";
 $result_total_order = $conn->query($sql_total_order);
 
 $sql_total_sales = "SELECT SUM((b.unitprice * b.quantity) * b.discount) AS Total_Sales FROM northwindmysql.orders a
                         JOIN northwindmysql.order_details b ON a.orderid = b.orderid
-                        WHERE YEAR(a.orderdate) = 1995 AND MONTH(a.orderdate) = 5;";
+                        WHERE YEAR(a.orderdate) = ".$selectedYear." and MONTH(a.orderdate) = ".$selectedMonth.";";
 $result_total_sales = $conn->query($sql_total_sales);
 
 $sql_daily_sales = "SELECT DAY(a.orderdate) AS date, SUM(ROUND((b.unitprice * b.quantity) * b.discount, 2)) AS daily_sales FROM northwindmysql.orders a
                         JOIN northwindmysql.order_details b ON a.orderid = b.orderid
-                        WHERE YEAR(a.orderdate) = 1995 AND MONTH(a.orderdate) = 5
+                        WHERE YEAR(a.orderdate) = ".$selectedYear." AND MONTH(a.orderdate) = ".$selectedMonth."
                         GROUP BY a.orderdate
                         ORDER BY a.orderdate;";
 $result_daily_sales = $conn->query($sql_daily_sales);
@@ -29,30 +47,33 @@ $sql_sales_by_product_categories = "SELECT d.categoryname AS category, SUM(ROUND
                                         JOIN northwindmysql.order_details b ON a.orderid = b.orderid
                                         JOIN northwindmysql.products c ON b.productid = c.productid
                                         JOIN northwindmysql.categories d ON c.categoryid = d.categoryid
-                                        WHERE YEAR(a.orderdate) = 1995 AND MONTH(a.orderdate) = 5
+                                        WHERE YEAR(a.orderdate) = ".$selectedYear." AND MONTH(a.orderdate) = ".$selectedMonth."
                                         GROUP BY d.categoryname;";
 $result_sales_by_product_categories = $conn->query($sql_sales_by_product_categories);
 
 $sql_sales_by_customers = "SELECT c.companyname AS company, SUM(ROUND((b.unitprice * b.quantity) * b.discount, 2)) AS sales FROM northwindmysql.orders a
                                 JOIN northwindmysql.order_details b ON a.orderid = b.orderid
                                 JOIN northwindmysql.customers c ON c.customerid = a.customerid
-                                WHERE YEAR(a.orderdate) = 1995 AND MONTH(a.orderdate) = 5
+                                WHERE YEAR(a.orderdate) = ".$selectedYear." AND MONTH(a.orderdate) = ".$selectedMonth."
                                 GROUP BY c.companyname;";
 $result_sales_by_customers = $conn->query($sql_sales_by_customers);
 
 $sql_sales_by_employees = "SELECT CONCAT(c.firstname, ' ', c.lastname) AS employee, SUM(ROUND((b.unitprice * b.quantity) * b.discount, 2)) AS sales FROM northwindmysql.orders a
                                 JOIN northwindmysql.order_details b ON a.orderid = b.orderid
                                 JOIN northwindmysql.employees c ON c.employeeid = a.employeeid
-                                WHERE YEAR(a.orderdate) = 1995 AND MONTH(a.orderdate) = 5
+                                WHERE YEAR(a.orderdate) = ".$selectedYear." AND MONTH(a.orderdate) = ".$selectedMonth."
                                 GROUP BY CONCAT(c.firstname, ' ', c.lastname);";
 $result_sales_by_employees = $conn->query($sql_sales_by_employees);
+
+$sql_list_of_order_years = "SELECT DISTINCT(YEAR(orderdate)) AS years FROM northwindmysql.orders;";
+$result_list_of_order_years = $conn->query($sql_list_of_order_years);
 
 if ($result_total_order->num_rows > 0) {
         // output data of each row
     $row_total_order = $result_total_order->fetch_assoc();
     $total_order = $row_total_order["Total_Order"];
 } else {
-    echo "0 results";
+    // echo "0 results";
 }
 
 if ($result_total_sales->num_rows > 0) {
@@ -60,7 +81,7 @@ if ($result_total_sales->num_rows > 0) {
     $row_total_sales = $result_total_sales->fetch_assoc();
     $total_sales = $row_total_sales["Total_Sales"];
 } else {
-    echo "0 results";
+    // echo "0 results";
 }
 
 if ($result_daily_sales->num_rows > 0) {
@@ -70,7 +91,7 @@ if ($result_daily_sales->num_rows > 0) {
         array_push($array_daily_sales, ["date" => $row["date"], "daily_sales" => $row["daily_sales"]]);
     }
 } else {
-    echo "0 results";
+    // echo "0 results";
 }
 
 if ($result_sales_by_product_categories->num_rows > 0) {
@@ -80,7 +101,7 @@ if ($result_sales_by_product_categories->num_rows > 0) {
         array_push($array_sales_by_product_categories, ["category" => $row["category"], "sales" => $row["sales"]]);
     }
 } else {
-    echo "0 results";
+    // echo "0 results";
 }
 
 if ($result_sales_by_customers->num_rows > 0) {
@@ -90,7 +111,7 @@ if ($result_sales_by_customers->num_rows > 0) {
         array_push($array_sales_by_customers, ["company" => $row["company"], "sales" => $row["sales"]]);
     }
 } else {
-    echo "0 results";
+    // echo "0 results";
 }
 
 if ($result_sales_by_employees->num_rows > 0) {
@@ -100,7 +121,17 @@ if ($result_sales_by_employees->num_rows > 0) {
         array_push($array_sales_by_employees, ["employee" => $row["employee"], "sales" => $row["sales"]]);
     }
 } else {
-    echo "0 results";
+    // echo "0 results";
+}
+
+if ($result_list_of_order_years->num_rows > 0) {
+    // output data of each row
+    $array_list_of_order_years = [];
+    while ($row = $result_list_of_order_years->fetch_assoc()) {
+        array_push($array_list_of_order_years, $row["years"]);
+    }
+} else {
+    // echo "0 results";
 }
 
 $conn->close();
@@ -145,7 +176,7 @@ $conn->close();
     </nav>
     <div class="container-fluid">
         <h1>Sales Dashboard</h1>
-        <h3>May 1995</h3>
+        <h3><?php echo $months[$selectedMonth].' '.$selectedYear; ?></h3>
 
         <div class="row">
             <div class="col-3">
@@ -165,6 +196,42 @@ $conn->close();
                     </div>
                     <div class="card-body">
                         <h3 class="font-weight-bold"><?php echo $total_order; ?></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        Search
+                    </div>
+                    <div class="card-body">
+                        <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="get">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="months">Month</label>
+                                        <select class="form-control" id="months" name="months">
+                                            <?php foreach ($months as $key => $value) { ?>
+                                            <option value="<?php echo $key; ?>" <?= $key == $selectedMonth ? ' selected="selected"' : ""; ?>><?php echo $value; ?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="years">Year</label>
+                                        <select class="form-control" id="years" name="years">
+                                            <?php foreach ($array_list_of_order_years as $value) { ?>
+                                            <option value="<?php echo $value; ?>" <?= $value == $selectedYear ? ' selected="selected"' : ""; ?>><?php echo $value; ?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <input type="submit" name="submit" class="btn btn-info btn-md" value="Search">
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
